@@ -1,14 +1,14 @@
 {
     "manifest_version": 3,
-    "name": "Quick Notes Sidebar",
+    "name": "Quick Notes",
     "version": "1.0.0",
-    "description": "Take and manage notes in a sidebar with Bootstrap styling",
+    "description": "Take and manage notes on your browser",
     "author": "Chukwuemeka Nwaneri",
     "icons": {
-      "16": "assets/img/logo.png",
-      "32": "assets/img/logo.png",
-      "48": "assets/img/logo.png",
-      "128": "assets/img/logo.png"
+      "16": "assets/img/Quick-Notes-16.png",
+      "32": "assets/img/Quick-Notes-32.png",
+      "48": "assets/img/Quick-Notes-48.png",
+      "128": "assets/img/Quick-Notes-128.png"
     },
     "permissions": [
       "storage",
@@ -22,13 +22,13 @@
       "<all_urls>"
     ],
     "action": {
-      "default_title": "Toggle Notes Sidebar",
+      "default_title": "Quick Notes",
       "default_popup": "main.html",
       "default_icon": {
-        "16": "assets/img/logo.png",
-        "32": "assets/img/logo.png",
-        "48": "assets/img/logo.png",
-        "128": "assets/img/logo.png"
+        "16": "assets/img/Quick-Notes-16.png",
+        "32": "assets/img/Quick-Notes-32.png",
+        "48": "assets/img/Quick-Notes-48.png",
+        "128": "assets/img/Quick-Notes-128.png"
       }
     },
     "background": {

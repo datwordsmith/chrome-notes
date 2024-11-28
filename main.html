@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quick Notes Sidebar</title>
+  <title>Quick Notes</title>
   <link href="assets/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="assets/css/styles.css">
@@ -12,7 +12,7 @@
 <body class="p-3" id="quick-notes-body">
   <div class="container-fluid p-0 sidebar" id="sidebar-container">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h6 class="m-0">Quick Notes</h6>
+      <img src="assets/img/Quick-Notes-header.png" height="20" alt="Quick Notes"/>
       <button class="btn btn-sm" id="toggleSidebar">
         <i class="bi bi-x"></i><span class="visually-hidden">Close</span>
       </button>
@@ -21,19 +21,34 @@
     <form id="note-form">
       <div class="form-floating mb-2">
         <textarea class="form-control" placeholder="Leave a comment here" id="note" rows="3" required></textarea>
-        <label for="note">New Note</label>
+        <label for="note"><small>Start here</small></label>
       </div>
-      <button type="submit" class="btn btn-primary w-100"><i class="bi bi-floppy"></i> Save Note</button>
+      <button type="submit" class="btn btn-qn w-100"><i class="bi bi-floppy"></i> Save Note</button>
     </form>
 
     <hr>
 
     <div>
       <h6>Saved Notes</h6>
-      <div class="notes-container small">
-        <ul id="notes-list" class="list-group"></ul>
+      <div class="notes-container small mb-3">
+        <ul id="notes-list" class="list-group me-2"></ul>
       </div>
     </div>
+
+    <!-- Offcanvas --> 
+    <div class="offcanvas offcanvas-end px-2" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel"> 
+      <div class="offcanvas-header"> 
+        <img src="assets/img/Quick-Notes-header.png" height="20" alt="Quick Notes"/>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div> 
+      <div class="offcanvas-body"> 
+            <small id="note-timestamp" class="text-muted"></small>
+            <hr>
+            <p id="full-note"></p> 
+      </div> 
+    </div>
+
+
   </div>
 
   <script src="assets/js/jquery-3.6.0.min.js"></script>

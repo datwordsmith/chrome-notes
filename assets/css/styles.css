@@ -2,8 +2,8 @@
   display: flex;
   justify-content: flex-end;
   min-width: 400px;
-  min-height: 400px;
-  max-height: 600px;
+  min-height: 600px;
+  max-height: 800px;
   overflow-x: hidden;
 
 
@@ -39,9 +39,6 @@
 
 
   #notes-list .list-group-item {
-    padding: 10px;
-    margin-bottom: 5px;
-    border-radius: 4px;
     font-size:small;
   }
 
@@ -57,5 +54,15 @@
 
   .hidden {
     display: none;
+  }
+
+  .btn-qn {
+    background-color: #E00000;
+    color: #FFFFFF;
+  }
+
+  .btn-link {
+    text-decoration: none;
+    color: red;
   }
 }
