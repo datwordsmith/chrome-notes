@@ -1,191 +1,294 @@
-document.addEventListener('DOMContentLoaded', function () {
-  const noteForm = document.getElementById('note-form');
-  const noteInput = document.getElementById('note');
-  const notesList = document.getElementById('notes-list');
+// Constants
+const STORAGE_KEY = 'quickNotes';
 
-  // Handle form submission
-  noteForm.addEventListener('submit', function (event) {
-    event.preventDefault();
-    const noteText = noteInput.value.trim();
-    if (noteText) {
-      saveNoteToStorage(noteText);
-      displayNotes();
-      noteInput.value = '';
-    }
-  });
+class MyQuickNotesManager {
+  constructor() {
+    this.noteForm = document.getElementById('note-form');
+    this.noteInput = document.getElementById('note');
+    this.notesList = document.getElementById('notes-list');
+    this.currentNoteIndex = null;
+    this.bindEvents();
+    this.displayNotes();
+  }
 
-  // Save note to localStorage
-  function saveNoteToStorage(note) {
-    try {
-      let notes = [];
-      try {
-        notes = JSON.parse(localStorage.getItem('quickNotes')) || [];
-      } catch (e) {
-        console.error('Error parsing stored notes:', e);
-        notes = [];
+  bindEvents() {
+    this.noteForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const noteText = this.noteInput.value.trim();
+      if (noteText) {
+        await this.saveNote(noteText);
+        await this.displayNotes();
+        this.noteInput.value = '';
       }
+    });
 
-      const noteData = {
-        text: note,
+    document.getElementById('toggleSidebar')?.addEventListener('click', () => window.close());
+  }
+
+  // Storage operations
+  async getNotes() {
+    try {
+      const result = await chrome.storage.sync.get(STORAGE_KEY);
+      return result[STORAGE_KEY] || [];
+    } catch (e) {
+      console.error('Error retrieving notes:', e);
+      return [];
+    }
+  }
+
+  async saveNote(text) {
+    try {
+      const notes = await this.getNotes();
+      notes.unshift({
+        text,
         timestamp: new Date().toLocaleString(),
         created: Date.now()
-      };
-      notes.unshift(noteData);
-      localStorage.setItem('quickNotes', JSON.stringify(notes));
-      console.log('Note saved successfully:', noteData);
+      });
+      await chrome.storage.sync.set({ [STORAGE_KEY]: notes });
     } catch (e) {
       console.error('Error saving note:', e);
     }
   }
 
-  // Delete a single note
-  function deleteNote(index) {
+  async deleteNote(index) {
     try {
-      let notes = JSON.parse(localStorage.getItem('quickNotes')) || [];
+      const notes = await this.getNotes();
       notes.splice(index, 1);
-      localStorage.setItem('quickNotes', JSON.stringify(notes));
-      displayNotes();
+      await chrome.storage.sync.set({ [STORAGE_KEY]: notes });
+      await this.displayNotes();
     } catch (e) {
       console.error('Error deleting note:', e);
     }
   }
 
-  // Delete all notes
-  function deleteAllNotes() {
+  async deleteAllNotes() {
     try {
-      localStorage.setItem('quickNotes', JSON.stringify([]));
-      displayNotes();
+      await chrome.storage.sync.set({ [STORAGE_KEY]: [] });
+      await this.displayNotes();
     } catch (e) {
       console.error('Error deleting all notes:', e);
     }
   }
 
-  // Display notes from localStorage
-  function displayNotes() {
+  createDeleteAllButton() {
+    const container = document.createElement('div');
+    container.className = 'mb-1 d-flex justify-content-end';
+    container.innerHTML = `
+      <button class="btn btn-link" id="deleteAllBtn"
+          data-bs-toggle="tooltip"
+          data-bs-placement="left" 
+          title="Delete all saved notes">
+          <small><small>Delete All</small></small>
+      </button>
+    `;
+    
+    container.querySelector('#deleteAllBtn').addEventListener('click', () => {
+      // Show the modal popup
+      const deleteAllNotesModal = new bootstrap.Modal(document.getElementById('deleteAllNotesModal'));
+      deleteAllNotesModal.show();
+  
+      // Set up the confirm delete all button
+      const confirmDeleteAllBtn = document.getElementById('confirmDeleteAllBtn');
+      confirmDeleteAllBtn.onclick = async () => {
+        await this.deleteAllNotes();
+        deleteAllNotesModal.hide();
+      };
+    });
+  
+    return container;
+  }
+  
+
+  createNoteItem(note, index) {
+    if (!note?.text || typeof note.text !== 'string') {
+      console.error('Invalid note object:', note);
+      return null;
+    }
+
+    const noteItem = document.createElement('li');
+    noteItem.className = 'list-group-item position-relative';
+    noteItem.style.cursor = 'pointer';
+    const truncated = note.text.length > 40 ? `${note.text.slice(0, 40)}...` : note.text;
+    
+    noteItem.innerHTML = `
+      <div class="note-content">
+        ${truncated}
+        <br>
+        <small class="fw-bold">${note.timestamp || 'No date'}</small>
+      </div>
+      <span class="float-end position-absolute" style="right: 1rem; top: 50%; transform: translateY(-50%);">
+        <button class="btn btn-danger btn-sm delete-note" 
+                data-index="${index}"
+                data-bs-toggle="tooltip" 
+                data-bs-placement="top" 
+                title="Delete this note">
+          <i class="bi bi-trash"></i>
+        </button>
+      </span>
+    `;
+
+    this.bindNoteItemEvents(noteItem, index);
+    return noteItem;
+  }
+
+
+
+  bindNoteItemEvents(noteItem, index) {
+    const deleteBtn = noteItem.querySelector('.delete-note');
+  
+    deleteBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+  
+      // Show the modal popup
+      const deleteNoteModal = new bootstrap.Modal(document.getElementById('deleteNoteModal'));
+      deleteNoteModal.show();
+  
+      // Set up the confirm delete button
+      const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+      confirmDeleteBtn.onclick = async () => {
+        await this.deleteNote(index);
+        deleteNoteModal.hide();
+      };
+    });
+  
+    noteItem.addEventListener('click', async (event) => {
+      if (!event.target.closest('.delete-note')) {
+        await this.showFullNote(index);
+      }
+    });
+  }
+  
+
+  async showFullNote(index) {
     try {
-      let notes = [];
-      try {
-        notes = JSON.parse(localStorage.getItem('quickNotes')) || [];
-      } catch (e) {
-        console.error('Error parsing stored notes:', e);
-        notes = [];
+      const notes = await this.getNotes();
+      const note = notes[index];
+      
+      if (!note?.text) {
+        throw new Error('Invalid note data');
       }
 
-      notesList.innerHTML = '';
+      this.currentNoteIndex = index;
+
+      const noteContentElement = document.getElementById('full-note');
+      const timestampElement = document.getElementById('note-timestamp');
+      const actionsContainer = document.getElementById('note-actions');
+
+      noteContentElement.textContent = note.text;
+      timestampElement.textContent = `Created on: ${note.timestamp || 'Unknown date'}`;
+
+      actionsContainer.innerHTML = `
+        <button class="btn btn-warning btn-sm text-white" id="editNoteBtn">
+          <i class="bi bi-pencil-square"></i> Edit
+        </button>
+        <button class="btn btn-success btn-sm me-1" id="saveNoteBtn" style="display: none;">
+          <i class="bi bi-floppy"></i> Save
+        </button>
+        <button class="btn btn-secondary btn-sm" id="cancelEditBtn" style="display: none;">
+          <i class="bi bi-x-circle"></i> Cancel
+        </button>
+      `;
+
+      // Bind edit mode events
+      this.bindEditModeEvents(noteContentElement, note.text);
+
+      const offcanvasElement = document.getElementById('offcanvasRight');
+      const offcanvas = new bootstrap.Offcanvas(offcanvasElement);
+      offcanvas.show();      
+
+    } catch (e) {
+      console.error('Error showing full note:', e);
+    }
+  }
+
+  bindEditModeEvents(noteContentElement, originalText) {
+    const editBtn = document.getElementById('editNoteBtn');
+    const saveBtn = document.getElementById('saveNoteBtn');
+    const cancelBtn = document.getElementById('cancelEditBtn');
+
+    editBtn.addEventListener('click', () => {
+      // Enter edit mode
+      noteContentElement.contentEditable = true;
+      noteContentElement.focus();
+      noteContentElement.classList.add('form-control');
       
-      // Add Delete All button if there are notes
+      // Toggle buttons
+      editBtn.style.display = 'none';
+      saveBtn.style.display = 'inline-block';
+      cancelBtn.style.display = 'inline-block';
+    });
+
+    saveBtn.addEventListener('click', async () => {
+      const newText = noteContentElement.textContent.trim();
+      if (newText) {
+        await this.updateNote(this.currentNoteIndex, newText);
+        this.exitEditMode(noteContentElement);
+      }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      // Reset content and exit edit mode
+      noteContentElement.textContent = originalText;
+      this.exitEditMode(noteContentElement);
+    });
+  }
+
+  exitEditMode(noteContentElement) {
+    noteContentElement.contentEditable = false;
+    noteContentElement.classList.remove('form-control');
+    
+    // Reset buttons
+    document.getElementById('editNoteBtn').style.display = 'inline-block';
+    document.getElementById('saveNoteBtn').style.display = 'none';
+    document.getElementById('cancelEditBtn').style.display = 'none';
+  }
+
+  async updateNote(index, newText) {
+    try {
+      const notes = await this.getNotes();
+      notes[index] = {
+        ...notes[index],
+        text: newText,
+        lastEdited: new Date().toLocaleString()
+      };
+      await chrome.storage.sync.set({ [STORAGE_KEY]: notes });
+      await this.displayNotes();
+    } catch (e) {
+      console.error('Error updating note:', e);
+    }
+  }
+
+
+  async displayNotes() {
+    try {
+      const notes = await this.getNotes();
+      this.notesList.innerHTML = '';
+
       if (notes.length > 0) {
-        const deleteAllContainer = document.createElement('div');
-        deleteAllContainer.className = 'mb-1 d-flex justify-content-end';
-        deleteAllContainer.innerHTML = `
-          <button class="btn btn-link" id="deleteAllBtn"
-              data-bs-toggle="tooltip"
-              data-bs-placement="left" 
-              title="Delete all saved notes"><small><small>
-              Delete All</small></small>
-          </button>
-        `;
-        notesList.appendChild(deleteAllContainer);
+        this.notesList.appendChild(this.createDeleteAllButton());
         
-        // Add Delete All event listener
-        document.getElementById('deleteAllBtn').addEventListener('click', function() {
-          if (confirm('Are you sure you want to delete all notes?')) {
-            deleteAllNotes();
+        notes.forEach((note, index) => {
+          const noteItem = this.createNoteItem(note, index);
+          if (noteItem) {
+            this.notesList.appendChild(noteItem);
           }
         });
-      }
-
-      notes.forEach((note, index) => {
-        if (!note || typeof note.text !== 'string') {
-          console.error('Invalid note object at index', index, note);
-          return;
-        }
-      
-        const noteItem = document.createElement('li');
-        noteItem.className = 'list-group-item';
-        const truncated = note.text.length > 40 ? note.text.slice(0, 40) + '...' : note.text;
-        noteItem.innerHTML = `
-          ${truncated}
-          <span class="float-end">
-            <a href="#" 
-               data-index="${index}" 
-               class="read-more-link btn btn-info btn-sm text-white" 
-               data-bs-toggle="tooltip" 
-               data-bs-placement="top" 
-               title="Read full note"><i class="bi bi-book"></i></a>
-            <button class="btn btn-danger btn-sm delete-note" 
-                    data-index="${index}"
-                    data-bs-toggle="tooltip" 
-                    data-bs-placement="top" 
-                    title="Delete this note">
-              <i class="bi bi-trash"></i>
-            </button>
-          </span>          
-          <br>
-          <small class="fw-bold">${note.timestamp || 'No date'}</small>
+      } else {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'text-center p-4';
+        emptyState.innerHTML = `
+          <img src="assets/img/bkg.png" 
+               alt="No notes found" 
+               class="image-fluid rounded shadow"
+               style="opacity: 0.6; height: 200px;">
         `;
-        notesList.appendChild(noteItem);
-      });
-      
-
-      // Add event listeners for read more links
-      document.querySelectorAll('.read-more-link').forEach(link => {
-        link.addEventListener('click', function (event) {
-          event.preventDefault();
-          try {
-            const index = parseInt(event.target.closest('.read-more-link').getAttribute('data-index')); // Ensure correct element is targeted
-            if (isNaN(index)) {
-              console.error('Invalid data-index attribute:', index);
-              return;
-            }
-            const notes = JSON.parse(localStorage.getItem('quickNotes')) || [];
-            const fullNote = notes[index];
-      
-            if (!fullNote || typeof fullNote.text !== 'string') {
-              console.error('Invalid note data for index:', index);
-              return;
-            }
-      
-            // Set full note text
-            document.getElementById('full-note').textContent = fullNote.text;
-      
-            // Set timestamp
-            const timestampElement = document.getElementById('note-timestamp');
-            timestampElement.textContent = `Created on: ${fullNote.timestamp || 'Unknown date'}`;
-      
-            // Show offcanvas
-            const offcanvasElement = document.getElementById('offcanvasRight');
-            const offcanvas = new bootstrap.Offcanvas(offcanvasElement);
-            offcanvas.show();
-          } catch (e) {
-            console.error('Error showing full note:', e);
-          }
-        });
-      });
-      
-
-      // Add event listeners for delete buttons
-      document.querySelectorAll('.delete-note').forEach(button => {
-        button.addEventListener('click', function(event) {
-          const index = parseInt(event.target.closest('.delete-note').getAttribute('data-index')); // Use closest to ensure correct element
-          if (confirm('Are you sure you want to delete this note?')) {
-            deleteNote(index);
-          }
-        });
-      });
-
-
+        this.notesList.appendChild(emptyState);
+      }
     } catch (e) {
       console.error('Error displaying notes:', e);
     }
   }
+}
 
-  // Load notes on page load
-  displayNotes();
-
-  // Close the popup
-  const toggleSidebarButton = document.getElementById('toggleSidebar');
-  toggleSidebarButton.addEventListener('click', () => {
-    window.close();
-  });
-});
+// Initialize on DOM load
+document.addEventListener('DOMContentLoaded', () => new MyQuickNotesManager());

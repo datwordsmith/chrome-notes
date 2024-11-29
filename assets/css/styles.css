@@ -1,68 +1,76 @@
-#quick-notes-body {
-  display: flex;
-  justify-content: flex-end;
-  min-width: 400px;
-  min-height: 600px;
-  max-height: 800px;
-  overflow-x: hidden;
+/* Root styles */
+.quick-notes-body-73553822109 {
+  display: flex !important;
+  justify-content: flex-end !important;
+  min-width: 400px !important;
+  min-height: 600px !important;
+  max-height: 900px !important;
+  overflow-x: hidden !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
 
+/* Sidebar styles */
+.quick-notes-body-73553822109 .sidebar {
+  width: 100% !important;
+  max-width: 500px !important;
+  height: 100% !important;
+  overflow-y: auto !important;
+}
 
-  .sidebar {
-    width: 100%;
-    max-width: 500px;
-    height: 100%;
-    overflow-y: auto;
-  }
+.quick-notes-body-73553822109 .notes-container {
+  max-height: 300px !important;
+  overflow-y: auto !important;
+}
 
-  .notes-container {
-    max-height: 300px;
-    overflow-y: auto;
-  }
+/* Scrollbar styles */
+.quick-notes-body-73553822109 ::-webkit-scrollbar {
+  width: 8px !important;
+}
 
-  /* Custom scrollbar styles */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
+.quick-notes-body-73553822109 ::-webkit-scrollbar-track {
+  background: #f1f1f1 !important;
+}
 
-  ::-webkit-scrollbar-track {
-    background: #f1f1f1;
-  }
+.quick-notes-body-73553822109 ::-webkit-scrollbar-thumb {
+  background: #888 !important;
+  border-radius: 4px !important;
+}
 
-  ::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 4px;
-  }
+.quick-notes-body-73553822109 ::-webkit-scrollbar-thumb:hover {
+  background: #555 !important;
+}
 
-  ::-webkit-scrollbar-thumb:hover {
-    background: #555;
-  }
+/* Form and list styles */
+.quick-notes-body-73553822109 #notes-list .list-group-item {
+  font-size: small !important;
+}
 
+.quick-notes-body-73553822109 textarea.form-control {
+  resize: vertical !important;
+  min-height: 80px !important;
+}
 
-  #notes-list .list-group-item {
-    font-size:small;
-  }
+.quick-notes-body-73553822109 .form-control:focus {
+  border-color: inherit !important;
+  box-shadow: none !important;
+}
 
-  textarea.form-control {
-    resize: vertical;
-    min-height: 80px;
-  }
+/* Utility classes */
+.quick-notes-body-73553822109 .hidden {
+  display: none !important;
+}
 
-  .form-control:focus {
-    border-color: none !important;
-    box-shadow: none !important;
-  }
+/* Button styles */
+.quick-notes-body-73553822109 .btn-qn {
+  background-color: #E00000 !important;
+  color: #FFFFFF !important;
+}
 
-  .hidden {
-    display: none;
-  }
+.quick-notes-body-73553822109 .btn-link {
+  text-decoration: none !important;
+  color: red !important;
+}
 
-  .btn-qn {
-    background-color: #E00000;
-    color: #FFFFFF;
-  }
-
-  .btn-link {
-    text-decoration: none;
-    color: red;
-  }
+.quick-notes-body-73553822109 .exit-btn {
+  float: right;
 }
